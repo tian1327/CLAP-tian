@@ -1,2 +1,7 @@
 .idea/
 .output/
+Dassl.pytorch/
+__pycache__/
+openclip_ckpts/
+data/
+output/

@@ -20,6 +20,7 @@ from dassl.optim import build_optimizer, build_lr_scheduler
 from clip import clip
 from clip.simple_tokenizer import SimpleTokenizer as _Tokenizer
 from datasets.imagenet_templates import IMAGENET_TEMPLATES, IMAGENET_TEMPLATES_SELECT
+# import open_clip
 
 torch.backends.cuda.matmul.allow_tf32 = True
 torch.backends.cudnn.benchmark = True
@@ -52,6 +53,14 @@ def load_clip_to_cpu(cfg):
     url = clip._MODELS[backbone_name]
     model_path = clip._download(url)
 
+    if backbone_name == 'ViT-B/32':
+        model_path = 'openclip_ckpts/vit_b_32-quickgelu-laion400m_e32-46683a32.pt'        
+    elif backbone_name == 'ViT-B/16':
+        model_path = 'openclip_ckpts/vit_b_16-laion400m_e32-55e67d44.pt'
+    else:
+        raise NotImplementedError
+    print("+++++ loading OpenCLIP model weights: ", model_path)
+
     try:
         # loading JIT archive
         model = torch.jit.load(model_path, map_location="cpu").eval()
@@ -64,6 +73,70 @@ def load_clip_to_cpu(cfg):
 
     return model
 
+OPENCLIP_MODEL_DIC = {
+    'laion400m': {
+        'vitb32': ('laion400m_e32','ViT-B-32-quickgelu'),
+        'vitb16': ('laion400m_e32','ViT-B-16'),
+        'vitl14': ('laion400m_e32','ViT-L-14'),
+    },
+    'openai': {
+        'vitb32': ('openai','ViT-B-32-quickgelu'),
+        'vitb16': ('openai','ViT-B-16'),
+        'vitl14': ('openai','ViT-L-14')
+    },
+    'laion2b': {
+        'vitb32': ('laion2b_s34b_b79k','ViT-B-32'),
+        'vitb16': ('laion2b_s34b_b88k','ViT-B-16'),
+        'vitl14': ('laion2b_s32b_b82k','ViT-L-14')
+    }
+}
+
+# def get_engine(model_cfg, device='cuda', mode='val'):
+
+#     arch = model_cfg.split('_')[0]
+#     model_name = model_cfg.split('_')[1]
+#     pretraining_dataset = model_cfg.split('_')[2]
+
+#     # print(f'arch: {arch}')
+#     # print(f'model_name: {model_name}')
+#     # print(f'pretraining_dataset: {pretraining_dataset}')
+    
+#     if model_name == 'clip':
+#         arch = CLIP_MODEL_DIC[arch]
+#         model, preprocess = clip.load(arch, device)
+#         tokenizer = clip.tokenize
+#         # get the train preprocess for CLIP
+#         # train_preprocess = transform(224, mode='train') 
+#         train_preprocess = preprocess
+
+#     elif model_name == 'openclip':
+#         corpus_config, model_arch = OPENCLIP_MODEL_DIC[pretraining_dataset][arch]
+#         model, train_preprocess, preprocess = open_clip.create_model_and_transforms(model_arch, pretrained=corpus_config)
+#         # print('train_preprocess:', train_preprocess)
+#         tokenizer = open_clip.get_tokenizer(model_arch)
+    
+#     else:
+#         raise NotImplementedError
+
+#     # not using mixed precision
+#     # model.float()
+#     # model.to(device)
+
+#     if mode == 'train':
+#         return model, train_preprocess, preprocess, tokenizer
+#     elif mode == 'val':
+#         return model, preprocess, tokenizer
+#     else:
+#         raise NotImplementedError
+
+# def load_openclip_to_cpu(cfg):
+#     backbone_name = cfg.MODEL.BACKBONE.NAME
+#     model, preprocess, tokenizer = get_engine(model_cfg=backbone_name)
+#     model.eval()
+#     model.dtype = torch.float16
+#     print(f"loaded openclip model: {backbone_name}")
+
+#     return model
 
 class TextEncoder(nn.Module):
     def __init__(self, clip_model):
@@ -295,6 +368,7 @@ class CustomCLIP(nn.Module):
         self.image_encoder = clip_model.visual
         self.logit_scale = clip_model.logit_scale
         self.dtype = clip_model.dtype  # float16
+
         text_encoder = TextEncoder(clip_model)
 
         # For TaskRes (Yu et al.) enhanced base - or regular CLIP base
@@ -500,6 +574,7 @@ class ADAPTER(TrainerXCostume):
 
         print(f"Loading CLIP (backbone: {cfg.MODEL.BACKBONE.NAME})")
         clip_model = load_clip_to_cpu(cfg)
+        # clip_model = load_openclip_to_cpu(cfg)
 
         if cfg.TRAINER.ADAPTER.PREC == "fp32" or cfg.TRAINER.ADAPTER.PREC == "amp":
             # CLIP's default precision is fp16

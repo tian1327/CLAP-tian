@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # custom config
-DATA=/data/
+DATA=/scratch/user/ltmask/CLAP/data/
 TRAINER=ADAPTER
 
 DEVICE=$1
