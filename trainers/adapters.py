@@ -45,6 +45,7 @@ CUSTOM_TEMPLATES = {
     "ImageNetV2": "a photo of a {}.",
     "ImageNetA": "a photo of a {}.",
     "ImageNetR": "a photo of a {}.",
+    "SemiAves": "a photo of a {}, a type of bird.",
 }
 
 
@@ -571,6 +572,8 @@ class ADAPTER(TrainerXCostume):
     def build_model(self):
         cfg = self.cfg
         classnames = self.dm.dataset.classnames
+        # print(f'len(classnames): {len(classnames)}')
+        # print(f'classnames: {classnames}')
 
         print(f"Loading CLIP (backbone: {cfg.MODEL.BACKBONE.NAME})")
         clip_model = load_clip_to_cpu(cfg)

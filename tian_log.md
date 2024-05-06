@@ -26,4 +26,7 @@ bash scripts/adapt.sh 0 eurosat SGD_lr1e-1_B256_ep300 4 ZS l2 ViT-B/32
 
 bash scripts/adapt.sh 0 oxford_flowers SGD_lr1e-1_B256_ep300 8 ZS l2 ViT-B/32
 
+bash scripts/adapt.sh 0 oxford_flowers SGD_lr1e-1_B256_ep300 8 ZS l2 ViT-B/16
+
+bash scripts/adapt.sh 0 semi-aves SGD_lr1e-1_B256_ep300 8 ZS l2 ViT-B/16
 ```
