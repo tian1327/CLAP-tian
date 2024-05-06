@@ -18,6 +18,9 @@ ln -s /scratch/group/real-fs/dataset/semi-aves semi-aves
 
 3. run CLAP
 ```bash
+# enter the env
+conda activate clap
+
 # reproduce the original code
 bash scripts/adapt.sh 0 eurosat SGD_lr1e-1_B256_ep300 16 ZS l2 RN50
 
