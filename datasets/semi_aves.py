@@ -20,7 +20,7 @@ def read_split(filepath):
         for line in f:
             line = line.strip()
             entried = line.split(" ")
-            impath = entried[0]
+            impath = "/scratch/group/real-fs/dataset/semi-aves/" + entried[0]
             label = entried[1]
             classname = classname_map[label]["name"]
             # print(f'impath: {impath}, label: {label}, classname: {classname}')
@@ -33,10 +33,11 @@ def read_split(filepath):
 @DATASET_REGISTRY.register()
 class SemiAves(DatasetBase):
 
-    dataset_dir = "semi_aves"
+    dataset_dir = "semi-aves"
 
     def __init__(self, cfg):
-        root = os.path.abspath(os.path.expanduser(cfg.DATASET.ROOT))
+        # root = os.path.abspath(os.path.expanduser(cfg.DATASET.ROOT))
+        root = '/scratch/user/ltmask/SWAT/data/'
         self.dataset_dir = os.path.join(root, self.dataset_dir)
 
         self.split_fewshot_dir = os.path.join(self.dataset_dir, "split_fewshot")
@@ -45,7 +46,7 @@ class SemiAves(DatasetBase):
         num_shots = cfg.DATASET.NUM_SHOTS
         seed = cfg.SEED
 
-        test = read_split(f'{self.dataset_dir}/test_fullpath.txt')
+        test = read_split(f'{self.dataset_dir}/test.txt')
         
         # preprocessed = os.path.join(self.split_fewshot_dir, f"shot_{num_shots}-seed_{seed}.pkl")
         # if os.path.exists(preprocessed):

@@ -13,9 +13,12 @@ INIT=$5         # Method / Linear Probe init - i.e. {RANDOM, ZS, ClipA, TipA, Ti
 CONSTRAINT=$6   # apply class-adaptive constraint in Linear Probing (CLAP) - i.e. {none, l2}
 BACKBONE=$7     # CLIP backbone to sue - i.e. {RN50, RN101, ViT-B/32, ViT-B/16}
 
+# Remove slashes from BACKBONE variable
+BACKBONE_CLEAN=$(echo $BACKBONE | sed 's/\///g')
+
 for SEED in 1 2 3
 do
-    DIR=output/FINAL/debug/${DATASET}/${CFG}_${INIT}Init_${CONSTRAINT}Constraint_${SHOTS}shots/seed${SEED}
+    DIR=output_${BACKBONE_CLEAN}/FINAL/debug/${DATASET}/${CFG}_${INIT}Init_${CONSTRAINT}Constraint_${SHOTS}shots/seed${SEED}
     if [ -d "$DIR" ]; then
         echo "Oops! The results exist at ${DIR} (so skip this job)"
     else
