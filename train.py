@@ -17,12 +17,18 @@ import datasets.sun397
 import datasets.caltech101
 import datasets.ucf101
 import datasets.imagenet
-import datasets.semi_aves
-
 import datasets.imagenet_sketch
 import datasets.imagenetv2
 import datasets.imagenet_a
 import datasets.imagenet_r
+
+import datasets.semi_aves
+import datasets.species196_insecta
+import datasets.species196_weeds
+import datasets.species196_mollusca
+import datasets.fungitastic_m
+import datasets.fish_vista_m
+
 
 from PIL import ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
@@ -144,7 +150,10 @@ def main(args):
         return
 
     if not args.no_train:
-        trainer.train()
+        final_test_acc = trainer.train()
+
+    # print "dataset,shot,seed,final_test_acc"
+    print(f'{cfg.DATASET.NAME},{cfg.DATASET.NUM_SHOTS},{cfg.SEED},{final_test_acc:.1f}')
 
 
 if __name__ == "__main__":

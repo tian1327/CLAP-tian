@@ -16,13 +16,25 @@ BACKBONE=$7     # CLIP backbone to sue - i.e. {RN50, RN101, ViT-B/32, ViT-B/16}
 # Remove slashes from BACKBONE variable
 BACKBONE_CLEAN=$(echo $BACKBONE | sed 's/\///g')
 
+# make a results directory to store the final accuracy results
+if [ ! -d "./results" ]; then
+    mkdir ./results
+fi
+
+# for SEED in 1
 for SEED in 1 2 3
 do
-    DIR=output_${BACKBONE_CLEAN}/FINAL/debug/${DATASET}/${CFG}_${INIT}Init_${CONSTRAINT}Constraint_${SHOTS}shots/seed${SEED}
+    echo "Running seed ${SEED}"
+    DIR=output_${BACKBONE_CLEAN}/${DATASET}/${CFG}_${INIT}Init_${CONSTRAINT}Constraint_${SHOTS}shots/seed${SEED}
     if [ -d "$DIR" ]; then
-        echo "Oops! The results exist at ${DIR} (so skip this job)"
-    else
-        CUDA_VISIBLE_DEVICES=${DEVICE} python train.py \
+        # echo "Oops! The results exist at ${DIR} (so skip this job)"
+        # remove the existing directory and re-run
+        # echo "The results exist at ${DIR}, but we remove it and re-run"        
+        rm -rf $DIR
+    fi
+    if [ ! -d "$DIR" ]; then
+        mkdir -p $DIR
+        CUDA_VISIBLE_DEVICES=${DEVICE} python -W ignore train.py \
         --root ${DATA} \
         --seed ${SEED} \
         --trainer ${TRAINER} \
@@ -32,6 +44,6 @@ do
         --backbone ${BACKBONE} \
         DATASET.NUM_SHOTS ${SHOTS} \
         TRAINER.ADAPTER.INIT ${INIT} \
-        TRAINER.ADAPTER.CONSTRAINT ${CONSTRAINT}
+        TRAINER.ADAPTER.CONSTRAINT ${CONSTRAINT}  > temp_output.txt && tail -n 1 temp_output.txt > ./results/CLAP_${DATASET}.txt && rm temp_output.txt
     fi
 done

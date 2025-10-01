@@ -46,6 +46,11 @@ CUSTOM_TEMPLATES = {
     "ImageNetA": "a photo of a {}.",
     "ImageNetR": "a photo of a {}.",
     "SemiAves": "a photo of a {}, a type of bird.",
+    "Species196Insecta": "a photo of a {}, a type of insect.",
+    "Species196Weeds": "a photo of a {}, a type of weed.",
+    "Species196Mollusca": "a photo of a {}, a type of mollusca.",
+    "FungitasticM": "a photo of a {}, a type of fungus.",
+    "FishVistaM": "a photo of a {}, a type of fish.",
 }
 
 
@@ -213,6 +218,7 @@ class AdapterMethod(nn.Module):
         self.register_buffer("base_text_features", base_text_features)
         self.alpha_constraint = torch.zeros((base_text_features.shape[0])).to(self.device)
         self.base_text_features = base_text_features
+        print("Base text features shape:", self.base_text_features.shape)
         self.augmentations = True  # True
         self.epochs_aumentation = 20  # 20
 
@@ -548,6 +554,7 @@ class TrainerXCostume(SimpleTrainer):
                 info = []
                 info += [f"epoch [{self.epoch + 1}/{self.max_epoch}]"]
                 info += [f"batch [{self.batch_idx + 1}/{self.num_batches}]"]
+                info += [f"lr {self.get_current_lr():.4e}"]
                 info += [f"{losses}"]
                 info += [f"eta {eta}"]
                 print(" ".join(info))
@@ -558,6 +565,7 @@ class TrainerXCostume(SimpleTrainer):
             self.write_scalar("train/lr", self.get_current_lr(), n_iter)
 
             end = time.time()
+
         return loss_summary
 
 
@@ -606,6 +614,8 @@ class ADAPTER(TrainerXCostume):
         self.scaler = GradScaler() if cfg.TRAINER.ADAPTER.PREC == "amp" else None
 
     def train(self):
+
+        final_test_acc = 0.0
         self.set_model_mode("eval")
 
         # Feature extraction on test set
@@ -705,15 +715,22 @@ class ADAPTER(TrainerXCostume):
 
                 # Train and update weights per epoch
                 self.before_epoch()
-                self.run_epoch()
+                loss_summary = self.run_epoch()
+                final_test_acc = loss_summary["acc_test"]
 
                 # Update lagrangian parameter and multiplier
                 if "adaptative" in self.model.adapter.apply_constraint:
                     self.model.adapter.outer_step()
+                else:
+                    # print("Not updating lagrangian multipliers!!!!!")
+                    pass
 
                 self.after_epoch()
 
         self.after_train()
+        
+        # return the final test accuracy
+        return final_test_acc
 
     def reset_hyperparams(self, params):
         import random
@@ -782,6 +799,7 @@ class ADAPTER(TrainerXCostume):
             # Constraint to zero-shot (CLAP)
             if self.model.adapter.apply_constraint != "none":
                 loss_constraint = self.model.adapter.zero_shot_constraint()
+                # print("Loss CE: {}, Loss constraint: {}".format(loss_ce.item(), loss_constraint.item()))
                 loss = loss_ce + loss_constraint
             else:
                 loss = loss_ce
@@ -895,7 +913,8 @@ class ADAPTER(TrainerXCostume):
 
             labels_ds, logits_ds, features_ds = [], [], []
             for rep in range(reps):
-                for batch_idx, batch in enumerate(tqdm(data_loader)):
+                # for batch_idx, batch in enumerate(tqdm(data_loader)):
+                for batch_idx, batch in enumerate(data_loader):
                     with torch.no_grad():
                         input, label = self.parse_batch_test(batch)
                         logits, features = self.model(input,  return_features=True)
@@ -911,7 +930,7 @@ class ADAPTER(TrainerXCostume):
             labels_ds, logits_ds, features_ds = [], [], []
             for rep in range(reps):
                 labels_ds_irep, logits_dsirep, features_ds_irep = [], [], []
-                for batch_idx, batch in enumerate(tqdm(data_loader)):
+                for batch_idx, batch in enumerate(data_loader):
                     with torch.no_grad():
                         input, label = self.parse_batch_test(batch)
                         logits, features = self.model(input, return_features=True)

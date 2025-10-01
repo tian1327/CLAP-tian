@@ -8,10 +8,11 @@ from .oxford_pets import OxfordPets
 from .dtd import DescribableTextures as DTD
 import json
 
+DATASET_NAME = "fish-vista-m"
+
 def read_split(filepath):
 
-    # with open('/scratch/group/real-fs/retrieved/semi-aves/semi-aves_metrics-LAION400M.json', 'r') as f:
-    with open('/home/ltmask/post-hoc_correction/data/semi-aves/semi-aves_labels.json', 'r') as f:
+    with open(f'/home/ltmask/post-hoc_correction/data/{DATASET_NAME}/{DATASET_NAME}_labels.json', 'r') as f:
         classname_map = json.load(f)
     # print(f'len(classname_map): {len(classname_map)}')
 
@@ -21,7 +22,7 @@ def read_split(filepath):
         for line in f:
             line = line.strip()
             entried = line.split(" ")
-            impath = "/home/ltmask/dataset/semi-aves/" + entried[0]
+            impath = f"/home/ltmask/dataset/{DATASET_NAME}/" + entried[0]
             label = entried[1]
             # classname = classname_map[label]["name"]
             classname = classname_map[label]["most_common_name"]
@@ -34,13 +35,12 @@ def read_split(filepath):
 
 
 @DATASET_REGISTRY.register()
-class SemiAves(DatasetBase):
+class FishVistaM(DatasetBase):
 
-    dataset_dir = "semi-aves"
+    dataset_dir = f"{DATASET_NAME}"
 
     def __init__(self, cfg):
         # root = os.path.abspath(os.path.expanduser(cfg.DATASET.ROOT))
-        # root = '/scratch/user/ltmask/SWAT/data/'
         root = '/home/ltmask/post-hoc_correction/data/'
 
         self.dataset_dir = os.path.join(root, self.dataset_dir)
@@ -52,9 +52,7 @@ class SemiAves(DatasetBase):
         seed = cfg.SEED
 
         test = read_split(f'{self.dataset_dir}/test.txt')
-        # test = read_split(f'{self.dataset_dir}/test_8000.txt')
-
-        
+       
         # preprocessed = os.path.join(self.split_fewshot_dir, f"shot_{num_shots}-seed_{seed}.pkl")
         # if os.path.exists(preprocessed):
         #     print(f"Loading preprocessed few-shot data from {preprocessed}")
