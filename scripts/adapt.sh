@@ -44,6 +44,6 @@ do
         --backbone ${BACKBONE} \
         DATASET.NUM_SHOTS ${SHOTS} \
         TRAINER.ADAPTER.INIT ${INIT} \
-        TRAINER.ADAPTER.CONSTRAINT ${CONSTRAINT}  > temp_output.txt && tail -n 1 temp_output.txt > ./results/CLAP_${DATASET}.txt && rm temp_output.txt
+        TRAINER.ADAPTER.CONSTRAINT ${CONSTRAINT}  > temp_output.txt && tail -n 1 temp_output.txt >> ./results/CLAP_${DATASET}.txt && rm temp_output.txt
     fi
 done
